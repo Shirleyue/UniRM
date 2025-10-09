@@ -1,0 +1,2 @@
+./data/png/04.Lake/T04C0D0036_n02_f02_ss_z00.png	./data/npz/T04C0D0036_n02_bdtr.npz
+./data/png/04.Lake/T04C0D0036_n02_f02_ss_z01.png	./data/npz/T04C0D0036_n02_bdtr.npz
