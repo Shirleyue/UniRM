@@ -29,22 +29,19 @@ from train import TrainLoop
 
 from cond_unet import PromptUnet_model
 
-
-#  正常情况下修改4个参数， mode， file_load_path, baseline, few_ratio，h_loss，patch_size, stage， enable_prompt, log_interval, num_epochs
 def create_argparser():
     defaults = dict(
         # dataset settings
         few_ratio = 1, # []
         img_size = 128,
-        sparse_rate = 0.01,  # [0.003,0.008,0.1]
-        tx_num = 15,   # 假定发射器的个数
+        sparse_rate = 0.01,  # 
+        tx_num = 15,  
         dataset = '',
         mode='training', # ['training','prompting','testing']
 
-        # file_load_path = 'results/prompUnet/pretrain/20250430_225538/Few_shot1_/model_best_stage_0',  #整体实验预训练
-
+        # file_load_path = 'results/prompUnet/pretrain/20250430_225538/Few_shot1_/model_best_stage_0', 
         file_load_path = '',
-        # file_load_path = 'results/prompUnet/prompt/20250508_094148/Few_shot1_/model_best_stage_1',  # 整体实验prompt，具有所有的提示信息
+        # file_load_path = 'results/prompUnet/prompt/20250508_094148/Few_shot1_/model_best_stage_1',  
 
         # experimental settings
         batch_size = 8, # [32,64,128]
@@ -65,7 +62,7 @@ def create_argparser():
         # model settings 
         size = '4',
         patch_size = 16,
-        png_save = False,  # 是否保存测试生成的图片
+        png_save = False,  
         baseline = False,
 
         # prompt learning settings
@@ -77,9 +74,8 @@ def create_argparser():
         # prompt_content = 'h_b',
         # prompt_content = 'f_b',
 
-        h_loss = True,  # 如果只嵌入频率或者建筑物，那么h_loss为False
+        h_loss = True,  
 
-        # 建筑物参数
         num_memory_spatial = 256,
         in_channels = 3,
         conv_num = 2,
@@ -138,11 +134,9 @@ if __name__ == '__main__':
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total parameters: {total_params/1e6:.1f}M") 
 
-    # 假设参数类型是 32 位浮点数（float32），每个参数占用 4 字节
     bytes_per_param = 4
     total_bytes = total_params * bytes_per_param
 
-    # 将字节数转换为 MB
     total_mb = total_bytes / (1024 * 1024)
     print(f"Total memory usage: {total_mb:.2f} MB")
     

@@ -83,24 +83,7 @@ def calculate_psnr(image1, image2):
     # return psnr(image1, image2)
 
 
-# def calculate_psnr(image1, image2):
-#     """
-#     计算峰值信噪比 (PSNR)
-#     :param image1: 原始图像 (numpy array)
-#     :param image2: 重构图像 (numpy array)
-#     :return: PSNR值
-#     """
-#     # 根据数据类型自动确定data_range
-#     if image1.dtype == np.uint8:
-#         data_range = 255  # uint8类型范围为0-255
-#     else:
-#         data_range = 1.0  # 假设非uint8类型为归一化到[0,1]的浮点数
-        
-#     # return psnr(image1, image2, data_range=data_range)
-    
-#     err = np.mean((image1 - image2) ** 2)
 
-#     return 10 * np.log10((data_range ** 2) / (err + 1e-10))
     
 
 
@@ -135,23 +118,15 @@ def evaluate_metrics(target, pred):
 
     return rmse_values, ssim_values, psnr_values, mse_values, nmse_values
 
-
-
-
-
-# 示例使用
 if __name__ == "__main__":
     import torch
 
-    # 假设我们有两个批量图像，rcv_rss 是生成的图像，rss_gt 是真实图像
-    rcv_rss = torch.rand(5, 1, 128, 128)  # 生成的图像 (b=5, 1, 128, 128)
-    rss_gt = torch.rand(5, 1, 128, 128)  # 真实图像 (b=5, 1, 128, 128)
+    rcv_rss = torch.rand(5, 1, 128, 128) 
+    rss_gt = torch.rand(5, 1, 128, 128)  
 
-    # 计算指标
     avg_rmse, avg_ssim, avg_psnr, mse, nmse = evaluate_metrics(rcv_rss, rss_gt)
     ssim_1 = ssim_tor(rss_gt)
 
-    # 输出结果
     print(f"Average RMSE: {avg_rmse}")
     print(f"Average SSIM: {avg_ssim}")
     print(f"Average PSNR: {avg_psnr}")

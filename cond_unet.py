@@ -650,7 +650,7 @@ class ConditionEncoder(nn.Module):
 class Unet(nn.Module):
     def __init__(
         self,
-        dim,   # 基础通道数（第一层卷积的通道数）
+        dim,  
         init_dim=None,
         out_dim=None,
         dim_mults=(1, 2, 4, 8),
@@ -677,7 +677,6 @@ class Unet(nn.Module):
     ):
         super().__init__()
 
-        # ---------------------------- 1. 参数初始化 ----------------------------
         self.args = args
         self.cond_pe = cfg.get('cond_pe', False)
         num_pos_feats = cfg.num_pos_feats if self.cond_pe else 0
@@ -687,11 +686,7 @@ class Unet(nn.Module):
         init_dim = default(init_dim, dim)
         self.enable_prompt = enable_prompt
         self.is_frozen = False
-
-        # ---------------------------- 2. 条件编码器初始化， 后面重点要改的，也是这部分 ----------------------------
-   
-        
-        # 根据配置选择预训练模型作为条件编码器
+     
         if self.enable_prompt != 0:
             f_condnet = cond_dim
             self.prompt = Prompt(args.num_memory_spatial, f_condnet, args.in_channels, args.conv_num, args.dilations, args.num_memory_freq, 
@@ -780,7 +775,7 @@ class Unet(nn.Module):
             nn.BatchNorm2d(init_dim),
         )
 
-        # 条件位置编码（可选）
+        
         if self.cond_pe:
             self.cond_pos_embedding = nn.Sequential(
                 PositionEmbeddingLearned(
@@ -789,13 +784,13 @@ class Unet(nn.Module):
             )
 
 
-        dims = [init_dim, *map(lambda m: dim * m, dim_mults)] # 各层实际通道数
+        dims = [init_dim, *map(lambda m: dim * m, dim_mults)] 
         dims_rev = dims[::-1]
         in_out = list(zip(dims[:-1], dims[1:]))
 
         block_klass = partial(ResnetBlock, groups = resnet_block_groups)
 
-        # ---------------------------- 4. 下采样路径 ----------------------------
+        # ---------------------------- 4. down sampling ----------------------------
         # layers
         self.downs = nn.ModuleList([])
         self.downs_mask = nn.ModuleList([])
@@ -821,7 +816,6 @@ class Unet(nn.Module):
                                                   layers=2, embed_dim=dims[ind], ffn_dim=dims[ind]*2,
                                                   window_size1=window_sizes1[ind], window_size2=window_sizes2[ind])
                                       )
-        # 中间块
         mid_dim = dims[-1]
         self.mid_block1 = block_klass(mid_dim, mid_dim, time_emb_dim = None)
         self.mid_attn = Residual(PreNorm(mid_dim, Attention(mid_dim)))
@@ -855,7 +849,6 @@ class Unet(nn.Module):
         if ckpt_path is not None:
             self.init_from_ckpt(ckpt_path, ignore_keys=ignore_keys)
         
-        #   ---- 是否冻结参数 --- #
         # fix_bb = cfg.get('fix_bb', True)
         # if fix_bb:
         #     for n, p in self.init_conv_mask.named_parameters():
@@ -890,7 +883,6 @@ class Unet(nn.Module):
                 nn.init.constant_(m.bias, 0.)
     
     def _freeze_backbone(self):
-        """冻结所有主干卷积参数（下采样、上采样、中间块）"""
         for name, param in self.named_parameters():
             if any([
                 'init_conv' in name,
@@ -903,7 +895,6 @@ class Unet(nn.Module):
         print("Backbone frozen for prompt learning.")
     
     def _unfreeze_backbone(self):
-        """解冻所有参数（用于调试或恢复训练）"""
         for param in self.parameters():
             param.requires_grad_(True)
         self.is_frozen = False
@@ -929,30 +920,6 @@ class Unet(nn.Module):
         stacked_tensor = torch.stack(freq_out, dim=0)
         freq_out = torch.mean(stacked_tensor, dim=0)
 
-        # td_out = self.prompt.terrain_prompt(x_terraian)
-        # stacked_tensor = torch.stack(td_out, dim=0)
-        # td_out = torch.mean(stacked_tensor, dim=0)
-
-
-        # bd_out = self.building_prompt(x_build_3d)
-        # h_out = self.height_prompt(x_build_height)
-
-        # freq_out = self.prompt.freq_promt(f_value) # (b, embed_dim)
-        # freq_out = freq_out.unsqueeze(-1).unsqueeze(-1).repeat(1, 1, H, W)  # (b, h'*w', embed_dim)
-
-        # h_out = self.prompt.height_prompt(h_value)
-        # h_out = h_out.unsqueeze(-1).unsqueeze(-1).repeat(1, 1, H, W)  # (b, h'*w', embed_dim)
-
-        # x_bd = x[:,[0,1],:,:]  # building and rss
-        # bd_out = self.prompt.building_prompt(x_bd)
-        # stacked_tensor = torch.stack(bd_out, dim=0)
-        # bd_out = torch.mean(stacked_tensor, dim=0)
-
-        # freq_out = self.norm_freq(freq_out)
-        # h_out = self.norm_h(h_out)
-        # bd_out = self.norm_bd(bd_out)
-
-
         return dict(f=freq_out, h=h_out, b=bd_out)
         # return dict(f=freq_out, h=h_out, b=bd_out, t=td_out)
 
@@ -965,11 +932,11 @@ class Unet(nn.Module):
         # x_inputs[:,5:,:]:ap
         # x_inputs[:,6:,:]:terrain
         x = x_inputs[:,:2,:,:]   # building and rss
-        x_clone = x[:, 1:2, :, :].clone()  # 只要rss信息
+        x_clone = x[:, 1:2, :, :].clone()  
         x = self.init_conv(x)
-        r = x.clone()  # 保留初始卷积特征，用于跳跃连接
+        r = x.clone()  
         
-        # ---------------------------- 2. 提示网络 ----------------------------
+        # ---------------------------- 2. prompt network ----------------------------
 
         if self.enable_prompt != 0:
             prompt = self.prompt_generate(x_inputs, x_freq, x_height)
@@ -998,17 +965,17 @@ class Unet(nn.Module):
 
             # ----拼接的条件特征对齐------- #
             fusion_prompt = self.fusion_conv(token_prompt)
-            gate = self.gate_conv(fusion_prompt)  # 学习融合权重
+            gate = self.gate_conv(fusion_prompt)  
             x = x + gate * fusion_prompt
 
         
         # ---------------------------- downsampling ----------------------------#
 
-        h = []  # 用于存储特征
+        h = []  
         for i, ((block1, block2, attn, downsample), relation_layer) \
                 in enumerate(zip(self.downs, self.relation_layers_down)):
-            x = block1(x)  # 残差块1
-            h.append(x)  # 存储特征
+            x = block1(x)  
+            h.append(x)  #
 
             x = block2(x) # residual block
             x = attn(x)   #attention
@@ -1047,7 +1014,7 @@ def print_requires_grad(model):
 def PromptUnet_model(args, **kwargs):
     if args.size == '1':
         model = Unet(dim=32, out_dim=1, dim_mults=(1, 2, 4, 8),
-                cond_dim=64,    # 条件维度
+                cond_dim=64,    
                 cond_dim_mults=(2, 4, ),
                 channels=2,
                 window_sizes1=[[8, 8], [4, 4], [2, 2], [1, 1]],
@@ -1115,25 +1082,23 @@ def PromptUnet_model(args, **kwargs):
     
     if args.size == '5':
         model = Unet(
-            dim=128,  # 基础通道数翻8倍 (32 -> 256)
+            dim=128, 
             out_dim=1,
-            dim_mults=(1, 2, 4, 8, 16, 32),  # 增加两个下采样阶段 (16, 32)
-            cond_dim=128,  # 条件维度大幅增加
+            dim_mults=(1, 2, 4, 8, 16, 32), 
+            cond_dim=128, 
             cond_dim_mults=(2, 4, 8, 16),
             channels=2,
-            # 调整窗口大小以适应更深的网络
             window_sizes1=[[32, 32], [16, 16], [8, 8], [4, 4], [2, 2], [1, 1]],
             window_sizes2=[[32, 32], [16, 16], [8, 8], [4, 4], [2, 2], [1, 1]],
-            resnet_block_groups=32,  # 增加GroupNorm的组数
-            # 修改Attention默认参数（需要更改Unet类内部的默认值）
-            # 通常需要修改 LinearAttention 和 Attention 的 heads 和 dim_head
+            resnet_block_groups=32,  
+
             enable_prompt=args.enable_prompt,
             cfg=fvcore.common.config.CfgNode({
                 'cond_pe': False,
                 'input_size': [128, 128],
                 'cond_feature_size': (32, 128),
                 'cond_net': 'prompt',
-                'num_pos_feats': 256  # 大幅增加位置编码维度
+                'num_pos_feats': 256  
             }),
             args=args,
             **kwargs,
@@ -1146,12 +1111,12 @@ def PromptUnet_model(args, **kwargs):
 #     args = create_argparser().parse_args()
 #     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #     model = PromptUnet_model(args=args).to(device)
-#     x = torch.randn(2, 7, 128, 128).to(device)  # 3通道输入
-#     f_value = torch.tensor([150, 3500], dtype=torch.float32).to(device)  # 原错误频率
-#     h_value = torch.tensor([1.5, 30], dtype=torch.float32).to(device)  # 原错误频率
+#     x = torch.randn(2, 7, 128, 128).to(device)  
+#     f_value = torch.tensor([150, 3500], dtype=torch.float32).to(device)  #
+#     h_value = torch.tensor([1.5, 30], dtype=torch.float32).to(device)  # 
 #     mask = torch.rand(2, 2, 128, 128).to(device)
 #     y = model(x, h_value, f_value, mask=None).to(device)
-#     print(f"输出形状: {y.shape}") 
+#     print(f": {y.shape}") 
 
 
 

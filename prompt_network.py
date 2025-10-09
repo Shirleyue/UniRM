@@ -75,7 +75,7 @@ class ASPP_Terrain(nn.Module):
     def __init__(self, in_channels=1, out_channels=32, dilations=[1, 6, 12]):
         super().__init__()
         middle_channels = out_channels // 2
-        # 空洞卷积分支
+  
         self.aspp_conv1 = nn.Sequential(
             nn.Conv2d(in_channels, middle_channels, kernel_size=3, 
                      padding=dilations[0], dilation=dilations[0]),
@@ -97,7 +97,6 @@ class ASPP_Terrain(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # 全局平均池化分支
         self.global_avg = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(in_channels, middle_channels, kernel_size=1),
@@ -105,7 +104,6 @@ class ASPP_Terrain(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # 特征融合层
         self.fusion = nn.Sequential(
             # nn.Conv2d(4 * out_channels, out_channels, kernel_size=1),
             nn.Conv2d(middle_channels*4, out_channels, kernel_size=1),
@@ -113,37 +111,34 @@ class ASPP_Terrain(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-        # 初始化所有子模块
         self._init_weights()
 
     def _init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                # 使用kaiming_normal_初始化卷积层
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
                 
-                # 偏置初始化为0
+        
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
-                # BatchNorm的gamma初始化为1，beta为0
+                
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
-        # 输入x为地形数据（B×1×H×W）
-        x1 = self.aspp_conv1(x)  # 空洞率1
-        x2 = self.aspp_conv2(x)  # 空洞率6
-        x3 = self.aspp_conv3(x)  # 空洞率12
+        x1 = self.aspp_conv1(x)  # 
+        x2 = self.aspp_conv2(x)  # 
+        x3 = self.aspp_conv3(x)  # 
         
-        # 全局平均池化分支
+
         x4 = self.global_avg(x)
         x4 = F.interpolate(x4, size=x.shape[2:], mode='bilinear', align_corners=False)
         
-        # 通道维度拼接
+
         out = torch.cat([x1, x2, x3, x4], dim=1)
         # out = x1 + x2 +x3 + x4
-        out = self.fusion(out)  # 融合后输出（B×32×H×W）
+        out = self.fusion(out) 
         return out
 
 class Terrain_prompt(nn.Module):
@@ -341,9 +336,8 @@ class Prompt(nn.Module):
     
 
 
-# 测试用例
+# test example
 if __name__ == "__main__":
-    # 空间参数
     num_memory_spatial = 512
     num_memory_freq = 512
     num_memory_height = 512
