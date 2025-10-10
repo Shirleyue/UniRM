@@ -2,7 +2,7 @@
 
 ![model framework](Figs/network_overview.png "Model Architecture")
 
-The official implementation of the JSAC 2025 paper entitled "UniRM: A Universal Large Model for Multiband 3D Radio Map Construction". 
+The official implementation of "UniRM: A Universal Large Model for Multiband 3D Radio Map Construction". 
 
 In this project, we propose a novel framework, UniRM, which leverages large-scale pre-training and prompt learning techniques to accurately generate radio maps across diverse environments, altitudes, and frequency bands. UniRM not only establishes a new state-of-the-art in radio map construction but also serves as a scalable and extensible foundation for future wireless communication applications.
 ## Installation
