@@ -22,11 +22,8 @@ All the data path can be found in ./dataset
 ## Model Training
 
 To train UniRM, run: ``prompt_unet_main.py``
-- For Pre-train, set stage=0, enable_prompt=0,file_load_path=''
-
-  
 ### Stage-1: Pre-training
-- For Pre-train, set stage=1, enable_prompt=1,file_load_path=''
+- For Pre-train, set stage=1, enable_prompt=0,file_load_path=''
 
 ### Stage-2: Prompt-tuning
 - For Prompt-tuning, set stage=0, enable_prompt=1,file_load_path='the saved path of the pretrained model'
